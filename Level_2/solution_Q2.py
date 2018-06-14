@@ -1,9 +1,6 @@
 def answers(total_lambs):
 	mg=most_generous(total_lambs)
 	ms=most_stingy(total_lambs)
-	print('total lambes {}'.format(total_lambs))
-	print('mg: {}'.format(mg))
-	print('ms: {}'.format(ms))
 	return ms-mg
 
 def most_stingy(n):
@@ -42,18 +39,28 @@ def most_generous(n):
 	'''
 	temp_sum=0
 	num_henchmen=0
+	sub=0.5
 	while True:
-		temp_sum+=2**num_henchmen
+		temp_sum+=int(sub*2)
 		if temp_sum>n:
-			break
+			# check if remains can still pay one more after second level
+			# if remains is greater than or equal to previous two subordinates' pay sum
+			if num_henchmen>=2:
+				rems=temp_sum-sub*2
+				min_pay=sub+sub/2
+				if n-rems>=min_pay:
+					num_henchmen+=1
+				return num_henchmen
+			else:
+				return num_henchmen
+		sub*=2
 		num_henchmen+=1
-	return num_henchmen
 
 def func_test():
 	for n in range(17):
 		print(str(n))
 		print('mg: {}'.format(most_generous(n)))
-		print('ms: {}'.format(most_stingy(n)))
+		# print('ms: {}'.format(most_stingy(n)))
 
 def unit_test(t,a,func):
 	ta=func(t)
@@ -63,8 +70,8 @@ def unit_test(t,a,func):
 		print('test case passed')
 
 def test():
-	input=[10, 143]
-	ans=[1, 3]
+	input=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+	ans = [0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1]
 	for t,a in zip(input, ans):
 		unit_test(t, a, answers)
 
