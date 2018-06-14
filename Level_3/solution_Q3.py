@@ -9,21 +9,23 @@ def answer(m, f):
 	# if m==f!=1. impossible to reach initial condition.
 	step=0
 	while True:
-		if m==f:
-			if m==1:
-				return step
+		if max(m,f)%min(f,m)==0:
+			if min(f,m)==1:
+				return step+max(m,f)-1
 			else:
 				return 'impossible'
 		elif m>f:
-			m-=f 
-			step+=1
+			skip=m//f
+			m%=f
+			step+=skip
 		else:
-			f-=m
-			step+=1
+			skip=f//m
+			f%=m
+			step+=skip
 	return step
 
 def unit_test(t,a,func):
-	ta=func(t)
+	ta=func(*t)
 	if a!=ta:
 		print('Error: input {}. Output should be {} instead of {}'.format(t, a, ta))
 	else:
