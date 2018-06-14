@@ -37,6 +37,7 @@ def most_generous(n):
 	most jonior henchmen gets only one lambs
 	1, 2, 4, 8, .... , 2^k
 	'''
+
 	temp_sum=0
 	num_henchmen=0
 	sub=0.5
@@ -45,9 +46,9 @@ def most_generous(n):
 		if temp_sum>n:
 			# check if remains can still pay one more after second level
 			# if remains is greater than or equal to previous two subordinates' pay sum
-			if num_henchmen>=2:
+			if num_henchmen>=1:
 				rems=temp_sum-sub*2
-				min_pay=sub+sub/2
+				min_pay=sub+int(sub/2)
 				if n-rems>=min_pay:
 					num_henchmen+=1
 				return num_henchmen
@@ -57,17 +58,17 @@ def most_generous(n):
 		num_henchmen+=1
 
 def func_test():
-	for n in range(17):
+	for n in range(30):
 		print(str(n))
 		print('mg: {}'.format(most_generous(n)))
-		# print('ms: {}'.format(most_stingy(n)))
+		print('ms: {}'.format(most_stingy(n)))
 
 def unit_test(t,a,func):
 	ta=func(t)
 	if a!=ta:
 		print('Error: input {}. Output should be {} instead of {}'.format(t, a, ta))
 	else:
-		print('test case passed')
+		print('input {}, output {}. test case passed'.format(t, ta))
 
 def test():
 	input=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -76,4 +77,4 @@ def test():
 		unit_test(t, a, answers)
 
 if __name__ == '__main__':
-	test()
+	func_test()
