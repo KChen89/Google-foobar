@@ -57,11 +57,11 @@ def most_generous(n):
 		sub*=2
 		num_henchmen+=1
 
-def func_test():
-	for n in range(30):
-		print(str(n))
-		print('mg: {}'.format(most_generous(n)))
-		print('ms: {}'.format(most_stingy(n)))
+# def func_test():
+# 	for n in range(30):
+# 		print(str(n))
+# 		print('mg: {}'.format(most_generous(n)))
+# 		print('ms: {}'.format(most_stingy(n)))
 
 def unit_test(t,a,func):
 	ta=func(t)
