@@ -1,25 +1,39 @@
 from fractions import Fraction, gcd
 def answer(m):
-	'''
-	solve absorbing Markov chain using FR where F=(I-Q)^-1
-	'''
+	# solve absorbing Markov chain using FR where F=(I-Q)^-1
 	mSize=len(m)
 	numCol=len(m[0])
-	if numCol!=mSize:
-		raise Exception('Matrix is NOT square')
+	# if numCol!=mSize:
+	# 	raise Exception('Matrix is NOT square')
 	if mSize==1:
 		return [1,1]
 	terminalIndice=list()
-	if not findTerminal(m, terminalIndice):
-		raise Exception('No teriminal states')
-	
+	findTerminal(m, terminalIndice)
 	I, Q, R=mPartition(m, terminalIndice)
+	IQ=mSub(I,Q)
+	F=mInverse(IQ)
+	FR=mMult(F, R)
+	rawProb=FR[0]
+	dnt=[x.denominator for x in rawProb]
+	nmrt=[x.numerator for x in rawProb]
+	lcmDnt=lcm(dnt)
+	for i in range(len(nmrt)):
+		nmrt[i]=nmrt[i]*lcmDnt/dnt[i]
+	nmrt.append(lcmDnt)
+	return nmrt
+
+def lcm(inputs):
+	tempLCM=None
+	for temp in inputs:
+		if tempLCM is None:
+			tempLCM=temp
+		else:
+			tempLCM=tempLCM*temp//gcd(tempLCM, temp)
+	return tempLCM
 		
 def findTerminal(matrix, terminalIndice):
-	'''
-	find terminal states and fill 1 in corresponding entry
-	convert matrix into fraction format
-	'''
+	# find terminal states and fill 1 in corresponding entry
+	# convert matrix into fraction format
 	mSize=len(matrix)
 	for i in range(mSize):
 		rowSum=sum(matrix[i])
@@ -42,7 +56,7 @@ def mPartition(matrix, terminalIndice):
 	mSize=len(matrix)
 
 	stateIndice=[x for x in range(mSize) if x not in terminalIndice]
-	print('state instance: {}'.format(stateIndice))
+	# print('state instance: {}'.format(stateIndice))
 	I=[[Fraction(1,1) if x==y else Fraction(0,1) for x in range(mSize-numT)] for y in range(mSize-numT)]
 	Q=[[0 for x in range(mSize-numT)] for y in range(mSize-numT)]
 	R=[[0 for x in range(numT)] for y in range(mSize-numT)]
@@ -53,13 +67,13 @@ def mPartition(matrix, terminalIndice):
 	for i,isi in enumerate(stateIndice):
 		for j,jsi in enumerate(terminalIndice):
 			R[i][j]=matrix[isi][jsi]
-	tempSum=0
-	for temp in R:
-		tempSum+=sum(temp)
-	if tempSum==0:
-		raise AssertionError('No path to teriminal states')
-	else:
-		return I, Q, R
+	# tempSum=0
+	# for temp in R:
+	# 	tempSum+=sum(temp)
+	# if tempSum==0:
+	# 	raise AssertionError('No path to teriminal states')
+	# else:
+	return I, Q, R
 			
 def mInverse(m):
 	h=len(m)
@@ -104,11 +118,11 @@ def findNonZero(m, col):
 
 def rowScale(m, ref, oth):
 	# make m[oth][ref]=0 by linear operation with m[ref][:]
-	if len(m)<max(ref, oth):
-		raise Exception('index is larger than matrix row')
+	# if len(m)<max(ref, oth):
+	# 	raise Exception('index is larger than matrix row')
 	scalar=m[oth][ref]/m[ref][ref]
-	if len(m[ref])!=len(m[oth]):
-		raise AssertionError('oth {}, ref {}'.format(len(m[oth]), len(m[ref])))
+	# if len(m[ref])!=len(m[oth]):
+	# 	raise AssertionError('oth {}, ref {}'.format(len(m[oth]), len(m[ref])))
 	for index in range(len(m[oth])):
 		m[oth][index]=m[oth][index]-scalar*m[ref][index]
 
@@ -119,8 +133,8 @@ def mMult(m1, m2):
 	h2=len(m2)
 	w2=len(m2[0])
 
-	if w1!=h2:
-		raise Exception('matrix size NOT match')
+	# if w1!=h2:
+	# 	raise Exception('matrix size NOT match')
 	product=[[0.0 for x in range(w2)] for y in range(h1)]
 	for i in range(h1):
 		for j in range(w2):
@@ -133,18 +147,18 @@ def innerProduct(m1, row, m2, col):
 	prod=0
 	w=len(m1[0])
 	h=len(m2)
-	if h!=w:
-		raise Exception('inner product: size NOT match')
+	# if h!=w:
+	# 	raise Exception('inner product: size NOT match')
 	for i in range(h):
 		prod+=m1[row][i]*m2[i][col]
 	return prod
 
 def mSub(m1, m2):
 	# return m1-m2 given sizes are exactly the same
-	if len(m1)!=len(m2):
-		raise Exception('Error mSub: matrix height is different')
-	if len(m1[0])!=len(m2[0]):
-		raise Exception('Error mSub: matrix width is different')
+	# if len(m1)!=len(m2):
+	# 	raise Exception('Error mSub: matrix height is different')
+	# if len(m1[0])!=len(m2[0]):
+	# 	raise Exception('Error mSub: matrix width is different')
 	m=[[Fraction(0,1) for x in range(len(m1[0]))] for y in range(len(m1))]
 	for i in range(len(m1)):
 		for j in range(len(m1[0])):
@@ -153,14 +167,33 @@ def mSub(m1, m2):
 
 def unit_test(t,a,func):
 	ta=func(t)
-	if a!=ta:
+	if not cmp(ta, a):
 		print('Error: input {}. Output should be {} instead of {}'.format(t, a, ta))
 	else:
 		print('input {}, output {}. test case passed'.format(t, ta))
 
+def cmp(ta, a):
+	if len(ta)!=len(a):
+		return False
+	for i in range(len(ta)):
+		if ta[i]!=a[i]:
+			return False
+	return True
+
 def test():
-	input=[[1,1], [2,1], [2,4], [4,7]]
-	ans=[0, 1, 'impossible', 4]
+	input=[[[0, 1, 0, 0, 0, 1],
+	   [4, 0, 0, 3, 2, 0],
+	   [0, 0, 0, 0, 0, 0],
+	   [0, 0, 0, 0, 0, 0],
+	   [0, 0, 0, 0, 0, 0],
+	   [0, 0, 0, 0, 0, 0]],
+
+	   [[0,2,1,0,0],
+	   [0,0,0,3,4],
+	   [0,0,0,0,0],
+	   [0,0,0,0,0],
+	   [0,0,0,0,0]]]
+	ans=[[0,3,2,9,14],[7,6,8,21]]
 	for t,a in zip(input, ans):
 		unit_test(t, a, answer)
 
@@ -171,6 +204,11 @@ def func_test():
 	   [0, 0, 0, 0, 0, 0],
 	   [0, 0, 0, 0, 0, 0],
 	   [0, 0, 0, 0, 0, 0]]
+	m=[[0,2,1,0,0],
+	   [0,0,0,3,4],
+	   [0,0,0,0,0],
+	   [0,0,0,0,0],
+	   [0,0,0,0,0]]
 	terminalIndice=list()
 	findTerminal(m, terminalIndice)
 	print('terminalIndice {}'.format(terminalIndice))
@@ -186,7 +224,21 @@ def func_test():
 	print('Inverse I-Q {}'.format(F))
 	FR=mMult(F, R)
 	print('FR {}'.format(FR))
-	
+	rawProbability=FR[0]
+	print('prob {}'.format(rawProbability))
+	rawProb=FR[0]
+	dnt=[x.denominator for x in rawProb]
+	nmrt=[x.numerator for x in rawProb]
+	lcmDnt=lcm(dnt)
+	print('denonimator {}'.format(dnt))
+	print('numerator {}'.format(nmrt))
+	print('lcm {}'.format(lcmDnt))
+	for i in range(len(nmrt)):
+		nmrt[i]=nmrt[i]*lcmDnt/dnt[i]
+	print('numerator {}'.format(nmrt))
+	nmrt.append(lcmDnt)
+	print('ans {}'.format(nmrt))
+
 
 if __name__ == '__main__':
-	func_test()
+	test()
