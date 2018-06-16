@@ -1,4 +1,4 @@
-
+from fractions import Fraction, gcd
 def answer(m):
 	'''
 	solve absorbing Markov chain using FR where F=(I-Q)^-1
@@ -6,18 +6,19 @@ def answer(m):
 	mSize=len(m)
 	numCol=len(m[0])
 	if numCol!=mSize:
-		raise AssertionError('Matrix is NOT square')
+		raise Exception('Matrix is NOT square')
+	if mSize==1:
+		return [1,1]
 	terminalIndice=list()
 	if not findTerminal(m, terminalIndice):
-		raise AssertionError('No teriminal states')
+		raise Exception('No teriminal states')
 	
 	I, Q, R=mPartition(m, terminalIndice)
 		
-
 def findTerminal(matrix, terminalIndice):
 	'''
 	find terminal states and fill 1 in corresponding entry
-	convert matrix into float format
+	convert matrix into fraction format
 	'''
 	mSize=len(matrix)
 	for i in range(mSize):
@@ -27,7 +28,7 @@ def findTerminal(matrix, terminalIndice):
 			terminalIndice.append(i)
 			matrix[i][i]=1.0
 		else:
-			matrix[i]=[float(x)/rowSum for x in matrix[i]]
+			matrix[i]=[Fraction(x, rowSum) for x in matrix[i]]
 	if len(terminalIndice)==0:
 		return False
 	else:
@@ -42,7 +43,7 @@ def mPartition(matrix, terminalIndice):
 
 	stateIndice=[x for x in range(mSize) if x not in terminalIndice]
 	print('state instance: {}'.format(stateIndice))
-	I=[[1.0 if x==y else 0.0 for x in range(numT)] for y in range(numT)]
+	I=[[Fraction(1,1) if x==y else Fraction(0,1) for x in range(mSize-numT)] for y in range(mSize-numT)]
 	Q=[[0 for x in range(mSize-numT)] for y in range(mSize-numT)]
 	R=[[0 for x in range(numT)] for y in range(mSize-numT)]
 	for i,isi in enumerate(stateIndice):
@@ -61,20 +62,92 @@ def mPartition(matrix, terminalIndice):
 		return I, Q, R
 			
 def mInverse(m):
-	pass
+	h=len(m)
+	w=len(m[0])
+	idt=[[Fraction(1,1) if x==y else Fraction(0,1) for x in range(w)] for y in range(h)]
+	# append idt to right side of m 
+	for i in range(h):
+		m[i]+=idt[i]
+	# check along diagnoal line 
+	for col in range(h):
+		digonalScale(m, col)
+		# make other rows at col zero 
+		for row in range(h):
+			if row!=col:
+				rowScale(m, col, row)
+	F=[]
+	for temp in m:
+		F.append(temp[w:])
+	return F
+
+def digonalScale(m, col):
+	'''
+	make diangoal one; if diagnoal is 0, find nearest row to swap; 
+	if the entire col is zero, matrix is non-invertible
+	'''
+	if m[col][col]==0:
+		fnz=findNonZero(m, col)
+		if fnz is None:
+			raise Exception('Matrix is non-invertible')
+		m[col], m[fnz]=m[fnz], m[col]
+	# scale m[col][col] to one
+	scalar=m[col][col]
+	m[col][col:]=[temp/scalar for temp in m[col][col:]]
+
+def findNonZero(m, col):
+	row=col
+	while row<len(m):
+		if m[row][col]!=0:
+			return row
+		row+=1
+	return None
+
+def rowScale(m, ref, oth):
+	# make m[oth][ref]=0 by linear operation with m[ref][:]
+	if len(m)<max(ref, oth):
+		raise Exception('index is larger than matrix row')
+	scalar=m[oth][ref]/m[ref][ref]
+	if len(m[ref])!=len(m[oth]):
+		raise AssertionError('oth {}, ref {}'.format(len(m[oth]), len(m[ref])))
+	for index in range(len(m[oth])):
+		m[oth][index]=m[oth][index]-scalar*m[ref][index]
 
 def mMult(m1, m2):
-	pass
+	# multiple two matrix m1 and m2
+	h1=len(m1)
+	w1=len(m1[0])
+	h2=len(m2)
+	w2=len(m2[0])
+
+	if w1!=h2:
+		raise Exception('matrix size NOT match')
+	product=[[0.0 for x in range(w2)] for y in range(h1)]
+	for i in range(h1):
+		for j in range(w2):
+			product[i][j]=innerProduct(m1, i, m2, j)
+	return product
+
+def innerProduct(m1, row, m2, col):
+	# compuate inner product of a row and column 
+	# given two matrix and row and col num
+	prod=0
+	w=len(m1[0])
+	h=len(m2)
+	if h!=w:
+		raise Exception('inner product: size NOT match')
+	for i in range(h):
+		prod+=m1[row][i]*m2[i][col]
+	return prod
 
 def mSub(m1, m2):
 	# return m1-m2 given sizes are exactly the same
 	if len(m1)!=len(m2):
-		raise AssertionError('Error mSub: matrix height is different')
+		raise Exception('Error mSub: matrix height is different')
 	if len(m1[0])!=len(m2[0]):
-		raise AssertionError('Error mSub: matrix width is different')
-	m=[[0.0 for x in range(len(m1[0]))] for y in range(len(m1))]
+		raise Exception('Error mSub: matrix width is different')
+	m=[[Fraction(0,1) for x in range(len(m1[0]))] for y in range(len(m1))]
 	for i in range(len(m1)):
-		for j in range(m1[0]):
+		for j in range(len(m1[0])):
 			m[i][j]=m1[i][j]-m2[i][j]
 	return m
 
@@ -93,19 +166,27 @@ def test():
 
 def func_test():
 	m=[[0, 1, 0, 0, 0, 1],
-		    [4, 0, 0, 3, 2, 0],
-		    [0, 0, 0, 0, 0, 0],
-		    [0, 0, 0, 0, 0, 0],
-		    [0, 0, 0, 0, 0, 0],
-		    [0, 0, 0, 0, 0, 0]]
+	   [4, 0, 0, 3, 2, 0],
+	   [0, 0, 0, 0, 0, 0],
+	   [0, 0, 0, 0, 0, 0],
+	   [0, 0, 0, 0, 0, 0],
+	   [0, 0, 0, 0, 0, 0]]
 	terminalIndice=list()
 	findTerminal(m, terminalIndice)
 	print('terminalIndice {}'.format(terminalIndice))
 	
 	I, Q, R=mPartition(m, terminalIndice)
+	IQ=mSub(I,Q)
+	F=mInverse(IQ)
+	print('matrix {}'.format(m))
 	print('Q {}'.format(Q))
 	print('R {}'.format(R))
 	print('I {}'.format(I))
+	print('I-Q {}'.format(IQ))
+	print('Inverse I-Q {}'.format(F))
+	FR=mMult(F, R)
+	print('FR {}'.format(FR))
+	
 
 if __name__ == '__main__':
 	func_test()
